@@ -3,7 +3,15 @@ Question)
 1.
 순차적이라는 것은 병렬처리와 거리가 있어보이는데 그렇다면 스트림은 이러한 순차적인 처리에서 어떠한 방식으로 병렬처리를 진행하는가?(parallelStream()에서만 병렬처리가 가능한가?)
 
- A. 스트림에서 구현되는 연산은 순차적으로 처리가 진행된다.
+ A. 스트림의 각 요소를 파이프라인에 정의된 연산으로 순차적으로 처리한다.
+ 
+ 스트림
+ [1,2,3,4,5,6]
+ 
+ 필터(짝수만 골라) - 1탈락 2반환 3탈락 4반환 5탈락 6반환
+ map(제곱하라)     - x     4반환  x    16반환 x    36반환
+ forEach           - x     4      x    16     x    36
+ 
  100대의 차량을 50개씩 나눠서 1차선과 2차선으로 양분해주는 것과 비슷한 맥락이다.
  해당 부분은 fork&join 프레임워크에서 상세히 나온다.
 
@@ -16,10 +24,28 @@ findFirst(), findAny() 는 어떻게 구별하여 사용하는가?
 
 ​ 그렇다면 findFirst()를 병렬처리에서 구현한다면 구체적으로 어떠한 에러를 뱉어내는가? 첫 번째 요소인지를 구별하기 위한 방법은 정말 없는가?
 
-A. 에러를 발생시키지 않지만 원하는 값이 나오지 않을수있다.
+A. 책에서 나오는 찾기 힘들다의 의미는 찾지 못한다의 의미가 아니라 찾는데 시간이 오래걸린다는 의미로 받아들여야된다.
+
 
 3.
  iterate와 generate를 통해 각각 피보나치 수열을 구현했을 떄 차이점.
+iterate는 람다식을 이용해 상태값이 변하지 못하지만,  generate를 통해 구현을 하게되면 람다식이 아닌 익명 클래스를 통해 구현을 해야한다.
+이는 generate의 파라미터가 supplier로 되어있기 때문이다. 익명 클래스를 통해 구현을 하게 된다면 가변 상태가된다. 인스턴스 변수에 어떤 요소가 있었는지 추적하므로 가변 상태의 객체로 본다.
+```java
+IntSupplier fib = new IntSupplier() {
+	private int previous = 0;
+	private int current = 1;
+			
+	@Override
+	public int getAsInt() {
+		int oldPrevious = this.previous;
+		int nextValue = this.previous + this.current;
+		this.previous = this.current;
+		this.current = nextValue;
+		return oldPrevious;
+	}
+};
+```
 
 4.
 왜 병렬 코드에서는 공급자에 상태가 있으면 안전하지 않다는 것인지 구현해서 알려주십시오.
